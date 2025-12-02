@@ -438,7 +438,7 @@ local function autoFarm()
         end
         dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
         teleportIndex = teleportIndex + 1
-        task.wait(30)
+        task.wait(10)
     end
 end
 
