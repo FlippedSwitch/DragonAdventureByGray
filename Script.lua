@@ -9,6 +9,8 @@ local ridingFarmEnable = false
 local getBondAmount = 0
 local getTrackingAmount = 0
 local treasureIndex = 0
+local autoFarmEnable = false
+local isAutoFarmScriptExecute = false
 
 -- 
 -- 
@@ -365,6 +367,84 @@ local function setCamToFixed(value)
         cam.CameraType = Enum.CameraType.Custom
     end
 end
+
+local function autoFarm()
+    local player = getLocalPlayer()
+    local resources = player.Data.Resources
+    local targetResources = {"Edamame", "KajiFruit", "MistSudachi"}
+    local sellItem = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItemRemote", 5)
+    local dragon = getDragon()
+    local teleportIndex = 1
+    local teleportPosition = {
+        [1] = Vector3.new(-1609, 602, 337),
+        [2] = Vector3.new(-1726, 620, -1807),
+        [3] = Vector3.new(-1720, 765, -4530),
+        [4] = Vector3.new(52, 786, -4055),
+        [5] = Vector3.new(1633, 649, -3858),
+        [6] = Vector3.new(1703, 518, -2140),
+        [7] = Vector3.new(1787, 538, -350),
+        [8] = Vector3.new(-401, 509, -414),
+        [9] = Vector3.new(-255, 445, -2327),
+    }
+
+    while autoFarmEnable do 
+        if game.PlaceId == 3475397644 then --Overworld
+            for i = 1, #targetResources do
+                if resources[targetResources[i]].Value > 0 then
+                    local Args = {
+                        ItemName = targetResources[i], 
+                        Amount = resources[targetResources[i]].Value
+                    }
+                    sellItem:FireServer(Args)
+                end
+            end
+
+            notifyWarning("Teleporting", "Shinrin")
+            task.wait(3)
+            local args = {
+                125804922932357,
+                {}
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("WorldTeleportRemote"):InvokeServer(unpack(args))
+            
+        elseif game.PlaceId == 125804922932357 then
+            local isGoalReached = true
+            for i = 1, #targetResources do
+                if resources[targetResources[i]].Value ~= 10000 then
+                    isGoalReached = false
+                end
+            end
+
+            if isGoalReached then
+                notifyWarning("Teleporting", "Overworld")
+                task.wait(3)
+                local args = {
+                    3475397644,
+                    {}
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("WorldTeleportRemote"):InvokeServer(unpack(args))
+            end
+            
+            if not isAutoFarmScriptExecute then
+                isAutoFarmScriptExecute = true
+                task.spawn(function()
+                    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
+                end)
+            end
+        end
+        
+        if teleportIndex > #teleportPosition then
+            teleportIndex = 1
+        end
+        dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
+        teleportIndex = teleportIndex + 1
+        task.wait(5)
+    end
+end
+
+game:GetService("Players").PlayerAdded:Connect(function()
+    game:Shutdown()
+end)
 -- 
 -- 
 -- 
@@ -382,6 +462,12 @@ local Window = Rayfield:CreateWindow({
    Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
    
    ToggleUIKeybind = "K",
+
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "GrayScript", -- Create a custom folder for your hub/game
+        FileName = "Dragon Adventure.asdf"
+    },
 })
 local farmTab = Window:CreateTab("Farm", "bot")
 local farmTabDivider1 = farmTab:CreateDivider()
@@ -392,7 +478,7 @@ local ridingFarmSlider = farmTab:CreateSlider({
     Increment = 0.1,
     Suffix = "Seconds",
     CurrentValue = 1,
-    Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Flag = "ridingFarmSlider", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
     Callback = function(Value)
         ridingFarmSpeed = Value
     end,
@@ -400,7 +486,7 @@ local ridingFarmSlider = farmTab:CreateSlider({
 local ridingFarmToggle = farmTab:CreateToggle({
     Name = "Start Riding Farm",
     CurrentValue = false,
-    Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Flag = "ridingFarmToggle", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
     Callback = function(Value)
         ridingFarmEnable = Value
         if Value then
@@ -443,7 +529,7 @@ local getBurstTrackingInput = farmTab:CreateInput({
     CurrentValue = "",
     PlaceholderText = "Amount",
     RemoveTextAfterFocusLost = false,
-    Flag = "Input1",
+    Flag = "trackingFarmInput",
     Callback = function(Text)
         if tonumber(Text) then
             getTrackingAmount = math.max(0, tonumber(Text))
@@ -458,7 +544,6 @@ local getBurstTrackingButton = farmTab:CreateButton({
         trackingFarm()
     end,
 })
-
 local farmTabDivider4 = farmTab:CreateDivider()
 local treasureLabel = farmTab:CreateLabel("Treasure Chest Location Teleport", "archive")
 local treasureIndexLabel = farmTab:CreateLabel("Current Chest 0")
@@ -477,6 +562,21 @@ local treasureButtonPrevious = farmTab:CreateButton({
    end,
 })
 
+-- AutoFarm Tab
+local autoFarmTab = Window:CreateTab("AutoFarm", "bot")
+local autoFarmTabDivider1 = autoFarmTab:CreateDivider()
+local autoFarmToggle = autoFarmTab:CreateToggle({
+   Name = "Start Autofarm",
+   CurrentValue = false,
+   Flag = "autoFarmEnable", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+        autoFarmEnable = Value
+        if Value then
+            autoFarm()
+        end
+        print(Value)
+   end,
+})
 -- Settings Tab
 
 local settingsTab = Window:CreateTab("Settings", "settings")
@@ -484,7 +584,7 @@ local settingsTabDivider1 = settingsTab:CreateDivider()
 local fixedCameraToggle = settingsTab:CreateToggle({
     Name = "Change Camera type to fixed",
     CurrentValue = false,
-    Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Flag = "fixedCamToggle", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
     Callback = function(Value)
         setCamToFixed(Value)
     end,
@@ -493,3 +593,5 @@ local fixedCameraToggleNote = settingsTab:CreateParagraph({
     Title = "Note",
     Content = "Enabling Fixed Camera will reduce lag by bypassing camera tweening and effects during teleports."
 })
+
+Rayfield:LoadConfiguration()
