@@ -394,11 +394,8 @@ local function getPlayers()
 end
 
 local function autoFarm()
-    local player = getLocalPlayer()
-    local resources = player.Data.Resources
     local targetResources = {"Edamame", "KajiFruit", "MistSudachi"}
     local sellItem = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItemRemote", 5)
-    local dragon = getDragon()
     local teleportIndex = 1
     local teleportPosition = {
         [1] = Vector3.new(-1609, 602, 337),
@@ -411,6 +408,12 @@ local function autoFarm()
         [8] = Vector3.new(-401, 509, -414),
         [9] = Vector3.new(-255, 445, -2327),
     }
+    local player = getLocalPlayer()
+    local dragon = getDragon()
+    if not dragon or not player then
+        return
+    end
+    local resources = player:WaitForChild('Data'):WaitForChild("Resources")
 
     while autoFarmEnable do 
         if game.PlaceId == worldPlaceIds["Overworld"] then
@@ -425,6 +428,9 @@ local function autoFarm()
             end
 
             for timer = 10, 0, -1 do
+                if not autoFarmEnable then
+                    return
+                end
                 notifyWarning("Teleporting", "Shinrin in " .. timer)
                 task.wait(1)
             end
@@ -513,7 +519,9 @@ local ridingFarmToggle = farmTab:CreateToggle({
     Callback = function(Value)
         ridingFarmEnable = Value
         if Value then
-            startRidingFarm()
+            task.spawn(function()
+                startRidingFarm()
+            end)
         end
     end,
 })
@@ -591,11 +599,13 @@ local autoFarmTabDivider1 = autoFarmTab:CreateDivider()
 local autoFarmToggle = autoFarmTab:CreateToggle({
    Name = "Start Autofarm",
    CurrentValue = false,
-   Flag = "autoFarmEnable", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Flag = "automaticfarmToggle", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
    Callback = function(Value)
         autoFarmEnable = Value
         if Value then
-            autoFarm()
+            task.spawn(function()
+                autoFarm()
+            end)
         end
    end,
 })
