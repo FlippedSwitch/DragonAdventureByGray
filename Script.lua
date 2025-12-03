@@ -10,7 +10,20 @@ local getBondAmount = 0
 local getTrackingAmount = 0
 local treasureIndex = 0
 local autoFarmEnable = false
-local isAutoFarmScriptExecute = false
+local isAutoFarmScriptExecuted = false
+local worldPlaceIds = {
+        ["Overworld"] = 3475397644, 
+        ["GrassLand"] = 3475419198, 
+        ["Jungle"] = 3475422608,
+        ["Volcano"] = 3487210751,
+        ["Tundra"] = 3623549100,
+        ["Underwater"] = 3737848045,
+        ["Desert"] = 3752680052,
+        ["Fantasy"] = 4174118306,
+        ["WasteLand"] = 4728805070,
+        ["Prehistoric"] = 4869039553,
+        ["Shinrin"] = 125804922932357,
+    }
 
 -- 
 -- 
@@ -142,7 +155,7 @@ local function trackingFarm()
 end
 
 local function teleportToTreasure(direction) 
-    local worldPlaceIds = {
+    local worldPlaceIdIndex = {
         [3475397644] = 1, --Overworld
         [3475419198] = 2, --GrassLand
         [3475422608] = 3, --Jungle
@@ -155,7 +168,7 @@ local function teleportToTreasure(direction)
         [4869039553] = 10, --Prehistoric
         [125804922932357] = 11, --Shinrin
     }
-    local worldIndex = worldPlaceIds[game.PlaceId]
+    local worldIndex = worldPlaceIdIndex[game.PlaceId]
     if not worldIndex then 
         notifyWarning("Error", "Unknown World")
         return
@@ -368,6 +381,18 @@ local function setCamToFixed(value)
     end
 end
 
+local function teleportTo(placeId)
+    local args = {
+        placeId,
+        {}
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("WorldTeleportRemote"):InvokeServer(unpack(args))
+end
+
+local function getPlayers()
+    return game:GetService("Players")
+end
+
 local function autoFarm()
     local player = getLocalPlayer()
     local resources = player.Data.Resources
@@ -388,7 +413,7 @@ local function autoFarm()
     }
 
     while autoFarmEnable do 
-        if game.PlaceId == 3475397644 then --Overworld
+        if game.PlaceId == worldPlaceIds["Overworld"] then
             for i = 1, #targetResources do
                 if resources[targetResources[i]].Value > 0 then
                     local Args = {
@@ -399,15 +424,13 @@ local function autoFarm()
                 end
             end
 
-            notifyWarning("Teleporting", "Shinrin")
-            task.wait(3)
-            local args = {
-                125804922932357,
-                {}
-            }
-            game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("WorldTeleportRemote"):InvokeServer(unpack(args))
+            for timer = 10, 0, -1 do
+                notifyWarning("Teleporting", "Shinrin in " .. timer)
+                task.wait(1)
+            end
             
-        elseif game.PlaceId == 125804922932357 then
+            teleportTo(worldPlaceIds["Shinrin"]) 
+        elseif game.PlaceId == worldPlaceIds["Shinrin"] then
             local isGoalReached = true
             for i = 1, #targetResources do
                 if resources[targetResources[i]].Value ~= 10000 then
@@ -417,34 +440,34 @@ local function autoFarm()
 
             if isGoalReached then
                 notifyWarning("Teleporting", "Overworld")
-                task.wait(3)
-                local args = {
-                    3475397644,
-                    {}
-                }
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("WorldTeleportRemote"):InvokeServer(unpack(args))
+                task.wait(10)
+                teleportTo(worldPlaceIds["Overworld"])
             end
             
-            if not isAutoFarmScriptExecute then
-                isAutoFarmScriptExecute = true
+            if not isAutoFarmScriptExecuted and #getPlayers():GetChildren() == 1 then
+                isAutoFarmScriptExecuted = true
                 task.spawn(function()
                     loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
                 end)
             end
+
+            -- Rejoin if other players is present
+            if isAutoFarmScriptExecuted and #getPlayers():GetChildren() > 1 then
+                teleportTo(worldPlaceIds["Shinrin"])
+            end
+            
+            if isAutoFarmScriptExecuted then
+                if teleportIndex > #teleportPosition then
+                    teleportIndex = 1
+                end
+                dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
+                teleportIndex = teleportIndex + 1
+            end    
+            task.wait(10)
         end
-        
-        if teleportIndex > #teleportPosition then
-            teleportIndex = 1
-        end
-        dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
-        teleportIndex = teleportIndex + 1
-        task.wait(10)
     end
 end
 
-game:GetService("Players").PlayerAdded:Connect(function()
-    game:Shutdown()
-end)
 -- 
 -- 
 -- 
@@ -574,7 +597,6 @@ local autoFarmToggle = autoFarmTab:CreateToggle({
         if Value then
             autoFarm()
         end
-        print(Value)
    end,
 })
 -- Settings Tab
