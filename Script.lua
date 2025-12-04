@@ -89,10 +89,11 @@ local function startRidingFarm()
     elseif game.PlaceId == 4869039553 then
         -- Prehistoric
         dragon:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(2390, 636, 64)
-        rings = {"1","2","3","4","5","6", "11", "12", "13","14","15","16", "17","57", "56", "55", "54", "53", "52", "51", "82", "49", "48", "47", "46", "45", "44", "43", "42", "41", "40",
-                "39", "38", "37", "36", "35", "34", "33", "32", "31", "30",
-                "29", "28", "27", "26", "25", "24", "23", "22", "21", "20",
-                "19", "18", "10", "9","8", "7"}
+        rings = {"1", "2", "4", "9", "10", "11", "12", "13", "14",
+				"35", "34", "33", "32", "31", "30", "29", "28", "27",
+				"26", "25", "24", "23", "22", "21", "20", "19", "18",
+				"17", "16", "15", "36", "37", "7", "8", "38", "6",
+				"39", "5", "40", "3"}
     else
         notifyWarning("Farm Failed", "Unknown World")
         return
@@ -419,23 +420,20 @@ local function autoFarm()
     local resources = player:WaitForChild('Data'):WaitForChild("Resources")
 
     if game.PlaceId == worldPlaceIds["Overworld"] then
-        while autoFarmEnable do 
-            for i = 1, #targetResources do
-                if resources[targetResources[i]].Value > 0 then
-                    local Args = {
-                        ItemName = targetResources[i], 
-                        Amount = resources[targetResources[i]].Value
-                    }
-                    sellItem:FireServer(Args)
-                end
+        for timer = 10, 0, -1 do
+            if not autoFarmEnable then
+                return
             end
-
-            for timer = 10, 0, -1 do
-                if not autoFarmEnable then
-                    return
-                end
-                notifyWarning("Teleporting", "Shinrin in " .. timer)
-                task.wait(1)
+            notifyWarning("Teleporting", "Shinrin in " .. timer)
+            task.wait(1)
+        end
+        for i = 1, #targetResources do
+            if resources[targetResources[i]].Value > 0 then
+                local Args = {
+                    ItemName = targetResources[i], 
+                    Amount = resources[targetResources[i]].Value
+                }
+                sellItem:FireServer(Args)
             end
         end
         teleportTo(worldPlaceIds["Shinrin"])
