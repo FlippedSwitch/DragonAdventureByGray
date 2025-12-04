@@ -10,6 +10,7 @@ local getBondAmount = 0
 local getTrackingAmount = 0
 local treasureIndex = 0
 local autoFarmEnable = false
+local autofarmFoodAmountTarget = 10000
 local isAutoFarmScriptExecuted = false
 local worldPlaceIds = {
         ["Overworld"] = 3475397644, 
@@ -46,7 +47,9 @@ local function getLocalPlayer()
 end
 
 local function getDragon() 
-    local workspaceDragons = workspace.Characters:WaitForChild(getLocalPlayer().Name):WaitForChild("Dragons"):GetChildren()
+    local name = getLocalPlayer().Name
+    local workspaceCharacter = workspace.Characters:WaitForChild(name, 10) or workspace.Characters:WaitForChild(name)
+    local workspaceDragons = workspaceCharacter:WaitForChild("Dragons"):GetChildren()
     if #workspaceDragons < 1 then
         notifyWarning("Farm Failed", "You have no dragon equiped")
         return
@@ -415,8 +418,8 @@ local function autoFarm()
     end
     local resources = player:WaitForChild('Data'):WaitForChild("Resources")
 
-    while autoFarmEnable do 
-        if game.PlaceId == worldPlaceIds["Overworld"] then
+    if game.PlaceId == worldPlaceIds["Overworld"] then
+        while autoFarmEnable do 
             for i = 1, #targetResources do
                 if resources[targetResources[i]].Value > 0 then
                     local Args = {
@@ -434,12 +437,29 @@ local function autoFarm()
                 notifyWarning("Teleporting", "Shinrin in " .. timer)
                 task.wait(1)
             end
-            
-            teleportTo(worldPlaceIds["Shinrin"]) 
-        elseif game.PlaceId == worldPlaceIds["Shinrin"] then
+        end
+        teleportTo(worldPlaceIds["Shinrin"])
+    end
+      
+    if game.PlaceId == worldPlaceIds["Shinrin"] then
+        task.spawn(function()
+            -- Teleport you around Shinrin
+            while autoFarmEnable do
+                if isAutoFarmScriptExecuted then
+                    if teleportIndex > #teleportPosition then
+                        teleportIndex = 1
+                    end
+                    dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
+                    teleportIndex = teleportIndex + 1
+                end
+                task.wait(10)
+            end
+        end)    
+
+        while autoFarmEnable do 
             local isGoalReached = true
             for i = 1, #targetResources do
-                if resources[targetResources[i]].Value ~= 10000 then
+                if resources[targetResources[i]].Value < autofarmFoodAmountTarget then
                     isGoalReached = false
                 end
             end
@@ -451,25 +471,17 @@ local function autoFarm()
             end
             
             if not isAutoFarmScriptExecuted and #getPlayers():GetChildren() == 1 then
-                isAutoFarmScriptExecuted = true
                 task.spawn(function()
                     loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
                 end)
+                isAutoFarmScriptExecuted = true
             end
 
             -- Rejoin if other players is present
             if isAutoFarmScriptExecuted and #getPlayers():GetChildren() > 1 then
                 teleportTo(worldPlaceIds["Shinrin"])
-            end
-            
-            if isAutoFarmScriptExecuted then
-                if teleportIndex > #teleportPosition then
-                    teleportIndex = 1
-                end
-                dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
-                teleportIndex = teleportIndex + 1
             end    
-            task.wait(10)
+            task.wait(1)
         end
     end
 end
@@ -608,6 +620,20 @@ local autoFarmToggle = autoFarmTab:CreateToggle({
             end)
         end
    end,
+})
+local getAutoFarmFoodTargetAmount = autoFarmTab:CreateInput({
+    Name = "Auto Farm Food Target Amount",
+    CurrentValue = "10000",
+    PlaceholderText = "Amount",
+    RemoveTextAfterFocusLost = false,
+    Flag = "autoFarmFoodTargetAmount",
+    Callback = function(Text)
+        if tonumber(Text) then
+            autofarmFoodAmountTarget = math.max(0, tonumber(Text))
+        else
+            notifyWarning("Warning", "Invalid Input")    
+        end
+    end,
 })
 -- Settings Tab
 
