@@ -48,7 +48,7 @@ end
 
 local function getDragon() 
     local name = getLocalPlayer().Name
-    local workspaceCharacter = workspace.Characters:WaitForChild(name, 10) or workspace.Characters:WaitForChild(name)
+    local workspaceCharacter = workspace.Characters:WaitForChild(name, 10) or workspace:WaitForChild(name)
     local workspaceDragons = workspaceCharacter:WaitForChild("Dragons"):GetChildren()
     if #workspaceDragons < 1 then
         notifyWarning("Farm Failed", "You have no dragon equiped")
