@@ -440,22 +440,33 @@ local function autoFarm()
     end
       
     if game.PlaceId == worldPlaceIds["Shinrin"] then
-        task.spawn(function()
-            -- Teleport you around Shinrin
-            while autoFarmEnable do
-                if isAutoFarmScriptExecuted then
-                    if teleportIndex > #teleportPosition then
-                        teleportIndex = 1
-                    end
-                    dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
-                    teleportIndex = teleportIndex + 1
-                end
-                task.wait(10)
+        -- task.spawn(function() -- Teleport you around Shinrin
+        --     while autoFarmEnable do
+        --         if isAutoFarmScriptExecuted then
+        --             if teleportIndex > #teleportPosition then
+        --                 teleportIndex = 1
+        --             end
+        --             dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
+        --             teleportIndex = teleportIndex + 1
+        --         end
+        --         task.wait(10)
+        --     end
+        -- end)   
+        
+        while autoFarmEnable do
+            local numPlayers = #getPlayers():GetChildren()
+            if not isAutoFarmScriptExecuted and #numPlayers == 1 then
+                task.spawn(function()
+                    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
+                end)
+                isAutoFarmScriptExecuted = true
             end
-        end)    
+            task.wait(1)
+        end
 
         while autoFarmEnable do 
             local isGoalReached = true
+            local numPlayers = getPlayers():GetChildren()
             for i = 1, #targetResources do
                 if resources[targetResources[i]].Value < autofarmFoodAmountTarget then
                     isGoalReached = false
@@ -463,23 +474,22 @@ local function autoFarm()
             end
 
             if isGoalReached then
-                notifyWarning("Teleporting", "Overworld")
-                task.wait(10)
+                for timer = 1, 10 do
+                    if autoFarmEnable then
+                        notifyWarning("Teleporting", "Overworld")
+                    else 
+                        return
+                    end
+                    task.wait(1)
+                end
                 teleportTo(worldPlaceIds["Overworld"])
-            end
-            
-            if not isAutoFarmScriptExecuted and #getPlayers():GetChildren() == 1 then
-                task.spawn(function()
-                    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
-                end)
-                isAutoFarmScriptExecuted = true
             end
 
             -- Rejoin if other players is present
-            if isAutoFarmScriptExecuted and #getPlayers():GetChildren() > 1 then
+            if isAutoFarmScriptExecuted and #numPlayers > 1 then
                 teleportTo(worldPlaceIds["Shinrin"])
             end    
-            task.wait(1)
+            task.wait(5)
         end
     end
 end
