@@ -452,10 +452,12 @@ local function autoFarm()
         --         task.wait(10)
         --     end
         -- end)   
-        
+        print(1)
         while autoFarmEnable do
             local players = #getPlayers():GetChildren()
+            print(2)
             if not isAutoFarmScriptExecuted and #players == 1 then
+                print(3)
                 task.spawn(function()
                     loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
                 end)
@@ -463,6 +465,7 @@ local function autoFarm()
             end
             task.wait(1)
         end
+        
 
         while autoFarmEnable do 
             local isGoalReached = true
