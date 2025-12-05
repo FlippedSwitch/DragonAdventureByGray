@@ -454,8 +454,8 @@ local function autoFarm()
         -- end)   
         
         while autoFarmEnable do
-            local numPlayers = #getPlayers():GetChildren()
-            if not isAutoFarmScriptExecuted and numPlayers == 1 then
+            local players = #getPlayers():GetChildren()
+            if not isAutoFarmScriptExecuted and #players == 1 then
                 task.spawn(function()
                     loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
                 end)
@@ -466,7 +466,7 @@ local function autoFarm()
 
         while autoFarmEnable do 
             local isGoalReached = true
-            local numPlayers = #getPlayers():GetChildren()
+            local players = getPlayers():GetChildren()
             for i = 1, #targetResources do
                 if resources[targetResources[i]].Value < autofarmFoodAmountTarget then
                     isGoalReached = false
@@ -486,7 +486,7 @@ local function autoFarm()
             end
 
             -- Rejoin if other players is present
-            if isAutoFarmScriptExecuted and numPlayers > 1 then
+            if isAutoFarmScriptExecuted and #players > 1 then
                 teleportTo(worldPlaceIds["Shinrin"])
             end    
             task.wait(5)
