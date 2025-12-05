@@ -398,7 +398,6 @@ local function getPlayers()
 end
 
 local function autoFarm()
-    print(1)
     local targetResources = {"Edamame", "KajiFruit", "MistSudachi"}
     local sellItem = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItemRemote", 5)
     local teleportIndex = 1
@@ -413,14 +412,12 @@ local function autoFarm()
         [8] = Vector3.new(-401, 509, -414),
         [9] = Vector3.new(-255, 445, -2327),
     }
-    print(2)
     local player = getLocalPlayer()
     local dragon = getDragon()
     if not dragon or not player then
         return
     end
     local resources = player:WaitForChild('Data'):WaitForChild("Resources")
-    print(3)
     if game.PlaceId == worldPlaceIds["Overworld"] then
         for timer = 10, 0, -1 do
             if not autoFarmEnable then
@@ -440,21 +437,19 @@ local function autoFarm()
         end
         teleportTo(worldPlaceIds["Shinrin"])
     end
-    print(3)
     if game.PlaceId == worldPlaceIds["Shinrin"] then
-        -- task.spawn(function() -- Teleport you around Shinrin
-        --     while autoFarmEnable do
-        --         if isAutoFarmScriptExecuted then
-        --             if teleportIndex > #teleportPosition then
-        --                 teleportIndex = 1
-        --             end
-        --             dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
-        --             teleportIndex = teleportIndex + 1
-        --         end
-        --         task.wait(10)
-        --     end
-        -- end)   
-        print(4)
+        task.spawn(function() -- Teleport you around Shinrin
+            while autoFarmEnable do
+                if isAutoFarmScriptExecuted then
+                    if teleportIndex > #teleportPosition then
+                        teleportIndex = 1
+                    end
+                    dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
+                    teleportIndex = teleportIndex + 1
+                end
+                task.wait(10)
+            end
+        end)   
         while autoFarmEnable do
             local players = getPlayers():GetChildren()
             if not isAutoFarmScriptExecuted and #players == 1 then
