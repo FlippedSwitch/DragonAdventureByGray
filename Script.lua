@@ -466,7 +466,7 @@ local function autoFarm()
 
         while autoFarmEnable do 
             local isGoalReached = true
-            local numPlayers = getPlayers():GetChildren()
+            local numPlayers = #getPlayers():GetChildren()
             for i = 1, #targetResources do
                 if resources[targetResources[i]].Value < autofarmFoodAmountTarget then
                     isGoalReached = false
@@ -486,7 +486,7 @@ local function autoFarm()
             end
 
             -- Rejoin if other players is present
-            if isAutoFarmScriptExecuted and #numPlayers > 1 then
+            if isAutoFarmScriptExecuted and numPlayers > 1 then
                 teleportTo(worldPlaceIds["Shinrin"])
             end    
             task.wait(5)
