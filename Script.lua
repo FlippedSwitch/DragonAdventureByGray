@@ -398,6 +398,7 @@ local function getPlayers()
 end
 
 local function autoFarm()
+    print(1)
     local targetResources = {"Edamame", "KajiFruit", "MistSudachi"}
     local sellItem = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SellItemRemote", 5)
     local teleportIndex = 1
@@ -412,13 +413,14 @@ local function autoFarm()
         [8] = Vector3.new(-401, 509, -414),
         [9] = Vector3.new(-255, 445, -2327),
     }
+    print(2)
     local player = getLocalPlayer()
     local dragon = getDragon()
     if not dragon or not player then
         return
     end
     local resources = player:WaitForChild('Data'):WaitForChild("Resources")
-
+    print(3)
     if game.PlaceId == worldPlaceIds["Overworld"] then
         for timer = 10, 0, -1 do
             if not autoFarmEnable then
@@ -438,7 +440,7 @@ local function autoFarm()
         end
         teleportTo(worldPlaceIds["Shinrin"])
     end
-      
+    print(3)
     if game.PlaceId == worldPlaceIds["Shinrin"] then
         -- task.spawn(function() -- Teleport you around Shinrin
         --     while autoFarmEnable do
@@ -452,12 +454,10 @@ local function autoFarm()
         --         task.wait(10)
         --     end
         -- end)   
-        print(1)
+        print(4)
         while autoFarmEnable do
-            local players = #getPlayers():GetChildren()
-            print(2)
+            local players = getPlayers():GetChildren()
             if not isAutoFarmScriptExecuted and #players == 1 then
-                print(3)
                 task.spawn(function()
                     loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
                 end)
