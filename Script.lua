@@ -455,7 +455,7 @@ local function autoFarm()
         
         while autoFarmEnable do
             local numPlayers = #getPlayers():GetChildren()
-            if not isAutoFarmScriptExecuted and #numPlayers == 1 then
+            if not isAutoFarmScriptExecuted and numPlayers == 1 then
                 task.spawn(function()
                     loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
                 end)
