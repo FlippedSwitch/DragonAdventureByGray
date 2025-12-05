@@ -409,7 +409,7 @@ local function autoFarm()
         [5] = Vector3.new(1633, 649, -3858),
         [6] = Vector3.new(1703, 518, -2140),
         [7] = Vector3.new(1787, 538, -350),
-        [8] = Vector3.new(-401, 509, -414),
+        [8] = Vector3.new(-482, 510, -778),
         [9] = Vector3.new(-255, 445, -2327),
     }
     local player = getLocalPlayer()
@@ -457,11 +457,11 @@ local function autoFarm()
                     loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
                 end)
                 isAutoFarmScriptExecuted = true
+                break
             end
             task.wait(1)
         end
         
-
         while autoFarmEnable do 
             local isGoalReached = true
             local players = getPlayers():GetChildren()
