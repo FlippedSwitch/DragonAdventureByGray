@@ -12,6 +12,7 @@ local treasureIndex = 0
 local autoFarmEnable = false
 local autofarmFoodAmountTarget = 10000
 local isAutoFarmScriptExecuted = false
+local autoEggFarmEnable = false
 local worldPlaceIds = {
         ["Overworld"] = 3475397644, 
         ["GrassLand"] = 3475419198, 
@@ -447,7 +448,7 @@ local function autoFarm()
                     dragon.HumanoidRootPart.CFrame = CFrame.new(teleportPosition[teleportIndex])
                     teleportIndex = teleportIndex + 1
                 end
-                task.wait(10)
+                task.wait(5)
             end
         end)   
         while autoFarmEnable do
@@ -474,7 +475,7 @@ local function autoFarm()
             if isGoalReached then
                 for timer = 1, 10 do
                     if autoFarmEnable then
-                        notifyWarning("Teleporting", "Overworld")
+                        notifyWarning("Teleporting", "Overworld in " .. timer)
                     else 
                         return
                     end
@@ -489,6 +490,34 @@ local function autoFarm()
             end    
             task.wait(5)
         end
+    end
+end
+
+local function autoEggFarm()
+    local interactions = workspace:WaitForChild("Interactions")
+    local nodes = interactions:WaitForChild("Nodes"):WaitForChild("Eggs")
+    local activeNodes = nodes:WaitForChild("ActiveNodes")
+    local dragon = getDragon()
+    local eggRemote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CollectEggRemote")
+    
+    while autoEggFarmEnable do 
+        local nests = activeNodes:GetChildren()
+        for _, nest in ipairs(nests) do
+            local egg = nest:FindFirstChild("EggModel"):FindFirstChild("Egg")
+            local eggCF = egg.CFrame
+            local tpPosition = Vector3.new(eggCF.X, eggCF.Y + 20, eggCF.Z)
+            dragon.HumanoidRootPart.CFrame = CFrame.new(tpPosition)
+
+            if not autoEggFarmEnable then
+                return
+            end
+
+            for i = 1, 50 do
+                eggRemote:InvokeServer("" .. i)
+            end
+            task.wait(0.2)
+        end
+        task.wait(0.1)
     end
 end
 
@@ -627,6 +656,7 @@ local autoFarmToggle = autoFarmTab:CreateToggle({
         end
    end,
 })
+
 local getAutoFarmFoodTargetAmount = autoFarmTab:CreateInput({
     Name = "Auto Farm Food Target Amount",
     CurrentValue = "10000",
@@ -640,6 +670,21 @@ local getAutoFarmFoodTargetAmount = autoFarmTab:CreateInput({
             notifyWarning("Warning", "Invalid Input")    
         end
     end,
+})
+
+local autoEggFarmSection = autoFarmTab:CreateSection("Auto Egg Farm")
+local autoEggToggle = autoFarmTab:CreateToggle({
+   Name = "Start Egg Collect",
+   CurrentValue = false,
+   Flag = "eggFarmEnable", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+        autoEggFarmEnable = Value
+        if Value then
+            task.spawn(function()
+                autoEggFarm()
+            end)
+        end
+    end
 })
 -- Settings Tab
 
