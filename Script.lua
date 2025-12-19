@@ -3,6 +3,10 @@ g.ScriptLoopId = (g.ScriptLoopId or 0) + 1
 local scriptOldId = g.ScriptLoopId
 
 -- Global Variables
+-- GUI Variables
+local autoFarmToggle
+local autoSnowFarmToggle
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local ridingFarmSpeed = 1
 local ridingFarmEnable = false
@@ -13,6 +17,7 @@ local autoFarmEnable = false
 local autofarmFoodAmountTarget = 10000
 local isAutoFarmScriptExecuted = false
 local autoEggFarmEnable = false
+local autoSnowFarmEnable = false
 local worldPlaceIds = {
         ["Overworld"] = 3475397644, 
         ["GrassLand"] = 3475419198, 
@@ -25,6 +30,7 @@ local worldPlaceIds = {
         ["WasteLand"] = 4728805070,
         ["Prehistoric"] = 4869039553,
         ["Shinrin"] = 125804922932357,
+        ["Winter Wonderland"] = 5777228223
     }
 
 -- 
@@ -416,7 +422,8 @@ local function autoFarm()
     local player = getLocalPlayer()
     local dragon = getDragon()
     if not dragon or not player then
-        return
+        autoFarmEnable = false
+        autoFarmToggle:Set(false)
     end
     local resources = player:WaitForChild('Data'):WaitForChild("Resources")
     if game.PlaceId == worldPlaceIds["Overworld"] then
@@ -473,7 +480,7 @@ local function autoFarm()
             end
 
             if isGoalReached then
-                for timer = 1, 10 do
+                for timer = 10, 0, -1 do
                     if autoFarmEnable then
                         notifyWarning("Teleporting", "Overworld in " .. timer)
                     else 
@@ -521,6 +528,46 @@ local function autoEggFarm()
     end
 end
 
+local function startSnowFarm()
+    local player = getLocalPlayer()
+    local dragon = getDragon()
+    if not dragon or not player then
+        autoSnowFarmEnable = false
+        autoSnowFarmToggle:Set(false)
+    end
+
+    if game.PlaceId == worldPlaceIds["Winter Wonderland"] then
+        while autoSnowFarmEnable do
+            local players = getPlayers():GetChildren()
+            if not isAutoFarmScriptExecuted and #players == 1 then
+                task.spawn(function()
+                    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/34824c86db1eba5e5e39c7c2d6d7fdfe.lua"))()
+                end)
+                isAutoFarmScriptExecuted = true
+                break
+            end
+            task.wait(5)
+        end
+        while autoSnowFarmEnable do
+            local players = getPlayers():GetChildren()
+            if #players > 1 then
+                teleportTo(worldPlaceIds["Overworld"])
+            end
+            task.wait(3)
+        end
+    
+    elseif game.PlaceId == worldPlaceIds["Overworld"] then
+        for timer = 10, 0, -1 do
+            if autoSnowFarmEnable then
+                notifyWarning("Teleporting", "Winter Wonderland in " .. timer)
+            else 
+                return
+            end
+            task.wait(1)
+        end
+        teleportTo(worldPlaceIds["Winter Wonderland"])
+    end
+end
 -- 
 -- 
 -- 
@@ -643,7 +690,7 @@ local treasureButtonPrevious = farmTab:CreateButton({
 -- AutoFarm Tab
 local autoFarmTab = Window:CreateTab("AutoFarm", "bot")
 local autoFarmTabDivider1 = autoFarmTab:CreateDivider()
-local autoFarmToggle = autoFarmTab:CreateToggle({
+autoFarmToggle = autoFarmTab:CreateToggle({
    Name = "Start Autofarm",
    CurrentValue = false,
    Flag = "automaticfarmToggle", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
@@ -686,6 +733,22 @@ local autoEggToggle = autoFarmTab:CreateToggle({
         end
     end
 })
+
+local autoSnowFarmSection = autoFarmTab:CreateSection("Auto Snow Farm")
+autoSnowFarmToggle = autoFarmTab:CreateToggle({
+   Name = "Start Snow Collect",
+   CurrentValue = false,
+   Flag = "snowFarmEnable", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+        autoSnowFarmEnable = Value
+        if Value then
+            task.spawn(function()
+                startSnowFarm()
+            end)
+        end
+    end
+})
+
 -- Settings Tab
 
 local settingsTab = Window:CreateTab("Settings", "settings")
